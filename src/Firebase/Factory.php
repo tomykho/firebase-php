@@ -70,6 +70,8 @@ class Factory
 
     protected ?UriInterface $databaseUri = null;
 
+    protected ?array $databaseAuthVariableOverride = null;
+
     protected ?string $defaultStorageBucket = null;
 
     protected ?ServiceAccount $serviceAccount = null;
@@ -169,10 +171,11 @@ class Factory
     /**
      * @param UriInterface|string $uri
      */
-    public function withDatabaseUri($uri): self
+    public function withDatabaseUri($uri, ?array $authVariableOverride): self
     {
         $factory = clone $this;
         $factory->databaseUri = GuzzleUtils::uriFor($uri);
+        $factory->databaseAuthVariableOverride = $authVariableOverride;
 
         return $factory;
     }
@@ -481,7 +484,7 @@ class Factory
         $handler = $http->getConfig('handler');
         $handler->push(Firebase\Http\Middleware::ensureJsonSuffix(), 'realtime_database_json_suffix');
 
-        return new Database($this->getDatabaseUri(), new Database\ApiClient($http));
+        return new Database($this->getDatabaseUri(), new Database\ApiClient($http, $this->databaseAuthVariableOverride));
     }
 
     public function createRemoteConfig(): Contract\RemoteConfig
